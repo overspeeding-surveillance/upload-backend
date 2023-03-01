@@ -6,6 +6,9 @@ import { getExtension } from "./utils";
 import fs from "fs";
 import amqp from "amqplib/callback_api";
 import { INITIAL_PYTHON_QUEUE } from "./consts";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const app = express();
 app.use(cors());
@@ -49,6 +52,11 @@ amqp.connect("amqp://localhost", function (error0, connection) {
       channel.sendToQueue(INITIAL_PYTHON_QUEUE, Buffer.from(filename));
       console.log(" [x] Sent %s", filename);
       res.send("upload-successful");
+    });
+
+    app.get("/detections", async (_, res) => {
+      const detections = await prisma.detection.findMany();
+      res.send(detections);
     });
 
     app.listen(5000, () => console.log("listening on port 5000 ..."));
